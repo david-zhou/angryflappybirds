@@ -3,10 +3,10 @@ application =
 
 	content =
 	{
-		width = 480,
-		height = 800, 
+		width = 320,
+		height = 480, 
 		scale = "letterBox",
-		fps = 60,
+		fps = 30,
 		
 		--[[
 		imageSuffix =
