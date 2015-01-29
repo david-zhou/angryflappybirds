@@ -48,11 +48,20 @@ transition.moveTo(text, movementParams)
 --]]
 
 
+local gradient = {
+    type="gradient",
+    color1={ 1, 1, 1 }, 
+    color2={ 0, 0, 0 }, 
+    direction="down"
+}
+
 local pipeUp = display.newRect(display.contentWidth-50, 0, 50, 300)
-pipeUp:setFillColor(0,1,0)
+pipeUp:setFillColor(gradient)
+
+gradient.direction="up"
 
 local pipeDown = display.newRect(display.contentWidth-50, display.contentHeight, 50, 300)
-pipeDown:setFillColor(0,1,0)
+pipeDown:setFillColor(gradient)
 
 
 local function gravity (event)
