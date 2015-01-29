@@ -10,6 +10,8 @@ print ('La wea mágica, dude')
 vs = 0
 gvt = 6
 
+local audio1 = audio.loadSound( "sfx_wing.ogg" )
+
 local screen_adjustment = 1
 local bg = display.newImage("Background.jpg", true)
 bg.xScale = (screen_adjustment  * bg.contentWidth)/bg.contentWidth
@@ -30,10 +32,12 @@ function bg:mouse(event)
 			x = ab.x,
 			y = newY,
 			time = 40
-		}
+		}sfx_wing.ogg
 		transition.moveTo(ab, movementParams)
 		--]]
+		local audio1Channel = audio.play( audio1 )
 	end
+
 end
 
 bg:addEventListener('mouse', bg)
