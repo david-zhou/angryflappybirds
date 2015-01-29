@@ -10,8 +10,12 @@ print ('La wea mágica, dude')
 vs = 0
 gvt = 6
 
-bg = display.newRect(display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight)
-bg:setFillColor(0,0,0)
+local screen_adjustment = 1
+local bg = display.newImage("Background.jpg", true)
+bg.xScale = (screen_adjustment  * bg.contentWidth)/bg.contentWidth
+bg.yScale = bg.xScale
+bg.x = display.contentWidth / 2
+bg.y = display.contentHeight / 2
 --text = display.newText("HOLA MUNDO", display.contentCenterX, display.contentCenterY, native.SystemFontBold, 20, 'left')
 ab = display.newImage('angrybird.gif')
 ab:translate(display.contentCenterX, display.contentCenterY)
@@ -58,7 +62,7 @@ local gradient = {
 local pipeUp = display.newRect(display.contentWidth-50, 0, 50, 300)
 pipeUp:setFillColor(gradient)
 
-gradient.direction="up"
+gradient.direction="down"
 
 local pipeDown = display.newRect(display.contentWidth-50, display.contentHeight, 50, 300)
 pipeDown:setFillColor(gradient)
