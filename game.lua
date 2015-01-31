@@ -64,6 +64,7 @@ function start()
 
 	ab:toFront()
 	scoreTitle:toFront()
+	scorePoints:toFront()
 end
 
 start()
@@ -89,7 +90,6 @@ local function movePipes (event)
 		pipe1upMid = pipe1rand / 2
 		pipe1downMid = (display.contentHeight + pipe1rand) / 2
 		
-		
 		--pipe1Up:translate(display.contentWidth + pipeWidth, pipe1upMid, 2 * pipeWidth, pipe1rand)
 		pipe1Up = display.newRect(display.contentWidth + pipeWidth, pipe1upMid, 2 * pipeWidth, pipe1rand)
 		pipe1Up:setFillColor(0,1,0)
@@ -98,10 +98,11 @@ local function movePipes (event)
 		pipe1Down = display.newRect(display.contentWidth + pipeWidth, pipe1downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe1rand)
 		pipe1Down:setFillColor(0,1,0)
 		
-		pipe1scoreAvailable = true
-		
 		ab:toFront()
 		scoreTitle:toFront()
+		scorePoints:toFront()
+		
+		pipe1scoreAvailable = true
 	end
 	
 	if pipe2Up.x < -pipeWidth then
@@ -122,6 +123,8 @@ local function movePipes (event)
 		
 		ab:toFront()
 		scoreTitle:toFront()
+		scorePoints:toFront()
+		
 		pipe2scoreAvailable = true
 	end
 	
@@ -140,6 +143,12 @@ local function movePipes (event)
 	end
 end
 
+local function retryScene()
+	retry = true
+	tryAgain = display.newText("Tap to try again", display.contentCenterX, 3 * display.contentHeight/5, native.SystemFontBold, 20, 'left')
+	tryAgain:setFillColor(0,0,0)
+end
+
 local function gameOver()
 	text = display.newText("Game over", display.contentCenterX, display.contentCenterY, native.SystemFontBold, 20, 'left')
 	text:setFillColor(0,0,0)
@@ -154,9 +163,8 @@ local function gameOver()
 		time = 1000
 	}
 	transition.moveTo(ab, movementParams)
-	retry = true
-	tryAgain = display.newText("Tap to try again", display.contentCenterX, 3 * display.contentHeight/5, native.SystemFontBold, 20, 'left')
-	tryAgain:setFillColor(0,0,0)
+	timer.performWithDelay(2000, retryScene)
+	
 end
 
 local function checkCollision (event)
