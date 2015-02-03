@@ -81,22 +81,18 @@ local function movePipes (event)
 	pipe2Down.x = pipe2Down.x - pipeMovement
 	
 	if pipe1Up.x < -pipeWidth then
-		
-		pipe1Up:setFillColor(0,0,0)
-		pipe1Down:setFillColor(0,0,0)
-		
 		pipe1rand = math.random(display.contentHeight/10, 5 *display.contentHeight/10)
 		
 		pipe1upMid = pipe1rand / 2
 		pipe1downMid = (display.contentHeight + pipe1rand) / 2
 		
-		--pipe1Up:translate(display.contentWidth + pipeWidth, pipe1upMid, 2 * pipeWidth, pipe1rand)
-		pipe1Up = display.newRect(display.contentWidth + pipeWidth, pipe1upMid, 2 * pipeWidth, pipe1rand)
-		pipe1Up:setFillColor(0,1,0)
+		pipe1Up.x = display.contentWidth + pipeWidth
+		pipe1Up.y = pipe1upMid
+		pipe1Up.height = pipe1rand
 
-		--pipe1Down:translate(display.contentWidth + pipeWidth, pipe1downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe1rand)
-		pipe1Down = display.newRect(display.contentWidth + pipeWidth, pipe1downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe1rand)
-		pipe1Down:setFillColor(0,1,0)
+		pipe1Down.x = display.contentWidth + pipeWidth
+		pipe1Down.y = pipe1downMid
+		pipe1Down.height = 6 * display.contentHeight/10 - pipe1rand
 		
 		ab:toFront()
 		scoreTitle:toFront()
@@ -106,20 +102,18 @@ local function movePipes (event)
 	end
 	
 	if pipe2Up.x < -pipeWidth then
-	
-		pipe2Up:setFillColor(0,0,0)
-		pipe2Down:setFillColor(0,0,0)
-		
 		pipe2rand = math.random(display.contentHeight/10, 5 *display.contentHeight/10)
 		
 		pipe2upMid = pipe2rand / 2
 		pipe2downMid = (display.contentHeight + pipe2rand) / 2
 		
-		pipe2Up = display.newRect(display.contentWidth + pipeWidth, pipe2upMid, 2 * pipeWidth, pipe2rand)
-		pipe2Up:setFillColor(0,1,0)
+		pipe2Up.x = display.contentWidth + pipeWidth
+		pipe2Up.y = pipe2upMid
+		pipe2Up.height = pipe2rand
 
-		pipe2Down = display.newRect(display.contentWidth  + pipeWidth, pipe2downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe2rand)
-		pipe2Down:setFillColor(0,1,0)
+		pipe2Down.x = display.contentWidth + pipeWidth
+		pipe2Down.y = pipe2downMid
+		pipe2Down.height = 6 * display.contentHeight/10 - pipe2rand
 		
 		ab:toFront()
 		scoreTitle:toFront()
@@ -149,15 +143,38 @@ local function retryScene()
 	tryAgain:setFillColor(0,0,0)
 end
 
-local function setRecord(scoreText, recordText, newRecord)
-	scoreText = display.newText('Score: ' .. scoreText, display.contentCenterX, 4 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+local function scoreAnimation()
+	if scoreText then
+		scoreText:removeSelf()
+	end
+	scoreText = display.newText('Score: ' .. scoreAnimationTemp, display.contentCenterX, 4 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
 	scoreText:setFillColor(0,0,0)
-	recordText = display.newText('Record: ' .. recordText, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	if scoreAnimationTemp > record then
+		recordText:removeSelf()
+		recordText = display.newText('Record: ' .. scoreAnimationTemp, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+		recordText:setFillColor(0,0,0)
+	end
+	scoreAnimationTemp = scoreAnimationTemp + 1
+end
+
+local function setNewRecord()
+	newRecordText = display.newText('NEW RECORD!' , display.contentCenterX, 3 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	newRecordText:setFillColor(1,140/255,0)
+end
+
+local function setRecord(scoreT, recordT, newRecord)
+	recordText = display.newText('Record: ' .. recordT, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
 	recordText:setFillColor(0,0,0)
 	
+	scoreAnimationTemp = 0
+	if scoreT < 3 then
+		timer.performWithDelay(500, scoreAnimation, scoreT + 1)
+	else
+		timer.performWithDelay(1500 / scoreT, scoreAnimation, scoreT + 1)
+	end
+	
 	if newRecord then 
-		newRecordText = display.newText('NEW RECORD!' , display.contentCenterX, 3 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-		newRecordText:setFillColor(0,0,0)
+		timer.performWithDelay(2000, setNewRecord)
 	end
 end
 
@@ -167,19 +184,13 @@ local function maxRecord()
 	
 	if file then		
 		local contents = file:read( "*a" )
-		local record = tonumber(contents)
+		record = tonumber(contents)
 		if score > record then
-			print ('mas alto')
-			print ('score: ' .. score .. ' record: ' .. record)
 			io.close(file)
 			file = io.open(filePath, 'w+')
 			file:write(score)
-			
-			setRecord(score, score, true)
+			setRecord(score, record, true)
 		else
-			print ('no mas alto')
-			print ('score: ' .. score .. ' record: ' .. record)
-			
 			setRecord(score, record, false)
 		end
 	else
@@ -206,8 +217,6 @@ local function gameOver()
 	timer.pause(gravityTimer)
 	timer.pause(movePipesTimer)
 	timer.pause(checkCollisionTimer)
-	--bg:removeEventListener('mouse', bg)
-	--bg:removeEventListener('touch', bg)
 	movementParams = {
 		x = ab.x,
 		y = 4 * display.contentHeight/5 - abH,
@@ -287,3 +296,7 @@ bg:addEventListener('mouse', bg)
 bg:addEventListener('touch', bg)
 
 
+local filePath = system.pathForFile('recordFile.txt',system.DocumentsDirectory)
+local file, errorMessage = io.open(filePath, "w+")
+file:write('0')
+io.close(file)
