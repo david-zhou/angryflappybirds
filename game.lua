@@ -145,12 +145,63 @@ end
 
 local function retryScene()
 	retry = true
-	tryAgain = display.newText("Tap to try again", display.contentCenterX, 3 * display.contentHeight/5, native.SystemFontBold, 20, 'left')
+	tryAgain = display.newText("Tap to try again", display.contentCenterX, 7 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
 	tryAgain:setFillColor(0,0,0)
 end
 
+local function setRecord(scoreText, recordText, newRecord)
+	scoreText = display.newText('Score: ' .. scoreText, display.contentCenterX, 4 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	scoreText:setFillColor(0,0,0)
+	recordText = display.newText('Record: ' .. recordText, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	recordText:setFillColor(0,0,0)
+	
+	if newRecord then 
+		newRecordText = display.newText('NEW RECORD!' , display.contentCenterX, 3 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+		newRecordText:setFillColor(0,0,0)
+	end
+end
+
+local function maxRecord()
+	local filePath = system.pathForFile('recordFile.txt',system.DocumentsDirectory)
+	local file, errorMessage = io.open(filePath, "r")
+	
+	if file then		
+		local contents = file:read( "*a" )
+		local record = tonumber(contents)
+		if score > record then
+			print ('mas alto')
+			print ('score: ' .. score .. ' record: ' .. record)
+			io.close(file)
+			file = io.open(filePath, 'w+')
+			file:write(score)
+			
+			setRecord(score, score, true)
+		else
+			print ('no mas alto')
+			print ('score: ' .. score .. ' record: ' .. record)
+			
+			setRecord(score, record, false)
+		end
+	else
+		file = io.open(filePath, 'w+')
+		file:write(score)
+		
+		if score > 0 then
+			setRecord(score, score, true)
+		else
+			setRecord(score, score, false)
+		end
+		
+	end
+	
+	io.close(file)
+	
+end
+
 local function gameOver()
-	text = display.newText("Game over", display.contentCenterX, display.contentCenterY, native.SystemFontBold, 20, 'left')
+	scoreTitle:removeSelf()
+	scorePoints:removeSelf()
+	text = display.newText("Game over", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
 	text:setFillColor(0,0,0)
 	timer.pause(gravityTimer)
 	timer.pause(movePipesTimer)
@@ -159,12 +210,12 @@ local function gameOver()
 	--bg:removeEventListener('touch', bg)
 	movementParams = {
 		x = ab.x,
-		y = 4 * display.contentHeight/5,
+		y = 4 * display.contentHeight/5 - abH,
 		time = 1000
 	}
 	transition.moveTo(ab, movementParams)
 	timer.performWithDelay(2000, retryScene)
-	
+	maxRecord()
 end
 
 local function checkCollision (event)
