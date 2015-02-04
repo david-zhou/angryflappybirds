@@ -17,6 +17,7 @@ function start()
 
 	started = false
 	retry = false
+	lost = false
 	
 	bg = display.newRect(display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight)
 	bg:setFillColor(100,50,20)
@@ -61,7 +62,11 @@ function start()
 
 	local floorBlock = display.newRect(display.contentCenterX, 9 * display.contentHeight/10, display.contentWidth, display.contentHeight/5)
 	floorBlock:setFillColor(0,0,1)
-
+	
+	flapSound = audio.loadSound("flap.mp3")
+	coinSound = audio.loadSound("coin_effect.mp3")
+	yellSound = audio.loadSound("yell.mp3")
+	
 	ab:toFront()
 	scoreTitle:toFront()
 	scorePoints:toFront()
@@ -70,17 +75,17 @@ end
 start()
 
 local function gravity (event)
+	if vs < 0 then
+		ab.rotation = 20
+	else
+		ab.rotation = -20
+	end
 	ab:translate(0,-vs)
 	vs = vs - gvt
 end
 
-local function movePipes (event)
-	pipe1Up.x = pipe1Up.x - pipeMovement
-	pipe1Down.x = pipe1Down.x - pipeMovement
-	pipe2Up.x = pipe2Up.x - pipeMovement
-	pipe2Down.x = pipe2Down.x - pipeMovement
-	
-	if pipe1Up.x < -pipeWidth then
+local function createNewPipe (pipeNumber)
+	if pipeNumber == 1 then
 		pipe1rand = math.random(display.contentHeight/10, 5 *display.contentHeight/10)
 		
 		pipe1upMid = pipe1rand / 2
@@ -99,9 +104,7 @@ local function movePipes (event)
 		scorePoints:toFront()
 		
 		pipe1scoreAvailable = true
-	end
-	
-	if pipe2Up.x < -pipeWidth then
+	else
 		pipe2rand = math.random(display.contentHeight/10, 5 *display.contentHeight/10)
 		
 		pipe2upMid = pipe2rand / 2
@@ -121,12 +124,28 @@ local function movePipes (event)
 		
 		pipe2scoreAvailable = true
 	end
+end
+
+local function movePipes (event)
+	pipe1Up.x = pipe1Up.x - pipeMovement
+	pipe1Down.x = pipe1Down.x - pipeMovement
+	pipe2Up.x = pipe2Up.x - pipeMovement
+	pipe2Down.x = pipe2Down.x - pipeMovement
+	
+	if pipe1Up.x < -pipeWidth then
+		createNewPipe(1)
+	end
+	
+	if pipe2Up.x < -pipeWidth then
+		createNewPipe(2)
+	end
 	
 	if pipe1Up.x + pipeWidth < ab.x - abH and pipe1scoreAvailable then
 		score = score + 1
 		scorePoints.text = score
 		scorePoints:toFront()
 		pipe1scoreAvailable = false
+		audio.play(coinSound)
 	end
 	
 	if pipe2Up.x + pipeWidth < ab.x - abH and pipe2scoreAvailable then
@@ -134,6 +153,7 @@ local function movePipes (event)
 		scorePoints.text = score
 		scorePoints:toFront()
 		pipe2scoreAvailable = false
+		audio.play(coinSound)
 	end
 end
 
@@ -145,14 +165,21 @@ end
 
 local function scoreAnimation()
 	if scoreText then
-		scoreText:removeSelf()
+		scoreText.text = 'Score: ' .. scoreAnimationTemp
+	else
+		scoreText = display.newText('Score: ' .. scoreAnimationTemp, display.contentCenterX, 4 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+		scoreText:setFillColor(0,0,0)
 	end
-	scoreText = display.newText('Score: ' .. scoreAnimationTemp, display.contentCenterX, 4 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	scoreText:setFillColor(0,0,0)
+	scoreText:toFront()
+	
 	if scoreAnimationTemp > record then
-		recordText:removeSelf()
-		recordText = display.newText('Record: ' .. scoreAnimationTemp, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-		recordText:setFillColor(0,0,0)
+		if recordText then
+			recordText.text = 'Record: ' .. scoreAnimationTemp
+		else
+			recordText = display.newText('Record: ' .. scoreAnimationTemp, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+			recordText:setFillColor(0,0,0)
+		end
+		
 	end
 	scoreAnimationTemp = scoreAnimationTemp + 1
 end
@@ -202,14 +229,15 @@ local function maxRecord()
 		else
 			setRecord(score, score, false)
 		end
-		
 	end
 	
 	io.close(file)
-	
 end
 
 local function gameOver()
+	audio.play(yellSound)
+	system.vibrate()
+	lost = true
 	scoreTitle:removeSelf()
 	scorePoints:removeSelf()
 	text = display.newText("Game over", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
@@ -217,6 +245,7 @@ local function gameOver()
 	timer.pause(gravityTimer)
 	timer.pause(movePipesTimer)
 	timer.pause(checkCollisionTimer)
+	ab.rotation = 90
 	movementParams = {
 		x = ab.x,
 		y = 4 * display.contentHeight/5 - abH,
@@ -258,6 +287,9 @@ function bg:mouse(event)
 		else
 			if started then
 				vs = display.contentHeight/50;
+				if not lost then
+					flapChannel = audio.play(flapSound)
+				end
 			else
 				started = true
 				vs = display.contentHeight/50;
@@ -265,6 +297,9 @@ function bg:mouse(event)
 				checkCollisionTimer = timer.performWithDelay(fps, checkCollision, -1)
 				gravityTimer = timer.performWithDelay(fps, gravity, -1)
 				tapToStart:removeSelf()
+				if not lost then
+					flapChannel = audio.play(flapSound)
+				end
 			end
 		end
 	end
@@ -295,8 +330,9 @@ end
 bg:addEventListener('mouse', bg)
 bg:addEventListener('touch', bg)
 
-
+--[[
 local filePath = system.pathForFile('recordFile.txt',system.DocumentsDirectory)
 local file, errorMessage = io.open(filePath, "w+")
 file:write('0')
 io.close(file)
+]]--

@@ -81,6 +81,7 @@ settings =
 		usesPermissions =
 		{
 			"android.permission.INTERNET",
+			"android.permission.VIBRATE",
 		},
 	},
 }
