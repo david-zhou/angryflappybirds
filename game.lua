@@ -63,9 +63,11 @@ function start()
 	local floorBlock = display.newRect(display.contentCenterX, 9 * display.contentHeight/10, display.contentWidth, display.contentHeight/5)
 	floorBlock:setFillColor(0,0,1)
 	
+	--[[
 	flapSound = audio.loadSound("flap.mp3")
 	coinSound = audio.loadSound("coin_effect.mp3")
 	yellSound = audio.loadSound("yell.mp3")
+	--]]
 	
 	ab:toFront()
 	scoreTitle:toFront()
@@ -145,7 +147,8 @@ local function movePipes (event)
 		scorePoints.text = score
 		scorePoints:toFront()
 		pipe1scoreAvailable = false
-		audio.play(coinSound)
+		--audio.play(coinSound)
+		media.playSound('coin.mp3')
 	end
 	
 	if pipe2Up.x + pipeWidth < ab.x - abH and pipe2scoreAvailable then
@@ -153,7 +156,8 @@ local function movePipes (event)
 		scorePoints.text = score
 		scorePoints:toFront()
 		pipe2scoreAvailable = false
-		audio.play(coinSound)
+		--audio.play(coinSound)
+		media.playSound('coin.mp3')
 	end
 end
 
@@ -235,7 +239,8 @@ local function maxRecord()
 end
 
 local function gameOver()
-	audio.play(yellSound)
+	--audio.play(yellSound)
+	media.playSound('yell.mp3')
 	system.vibrate()
 	lost = true
 	scoreTitle:removeSelf()
@@ -288,7 +293,8 @@ function bg:mouse(event)
 			if started then
 				vs = display.contentHeight/50;
 				if not lost then
-					flapChannel = audio.play(flapSound)
+					--audio.play(flapSound)
+					media.playSound('flap.mp3')
 				end
 			else
 				started = true
@@ -298,7 +304,8 @@ function bg:mouse(event)
 				gravityTimer = timer.performWithDelay(fps, gravity, -1)
 				tapToStart:removeSelf()
 				if not lost then
-					flapChannel = audio.play(flapSound)
+					--audio.play(flapSound)
+					media.playSound('flap.mp3')
 				end
 			end
 		end
@@ -315,6 +322,10 @@ function bg:touch(event)
 		else
 			if started then
 				vs = display.contentHeight/50;
+				if not lost then
+					--audio.play(flapSound)
+					media.playSound('flap.mp3')
+				end
 			else
 				started = true
 				vs = display.contentHeight/50;
@@ -322,6 +333,10 @@ function bg:touch(event)
 				checkCollisionTimer = timer.performWithDelay(fps, checkCollision, -1)
 				gravityTimer = timer.performWithDelay(fps, gravity, -1)
 				tapToStart:removeSelf()
+				if not lost then
+					--audio.play(flapSound)
+					media.playSound('flap.mp3')
+				end
 			end
 		end
 	end
