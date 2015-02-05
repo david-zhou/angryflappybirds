@@ -1,3 +1,45 @@
+local gameNetwork = require( "gameNetwork" )
+local playerName
+
+local function loadLocalPlayerCallback( event )
+   playerName = event.data.alias
+   saveSettings()  --save player data locally using your own "saveSettings()" function
+end
+
+local function gameNetworkLoginCallback( event )
+   gameNetwork.request( "loadLocalPlayer", { listener=loadLocalPlayerCallback } )
+   return true
+end
+
+local function gpgsInitCallback( event )
+   gameNetwork.request( "login", { userInitiated=true, listener=gameNetworkLoginCallback } )
+end
+
+local function gameNetworkSetup()
+   if ( system.getInfo("platformName") == "Android" ) then
+      gameNetwork.init( "google", gpgsInitCallback )
+   else
+      gameNetwork.init( "gamecenter", gameNetworkLoginCallback )
+   end
+end
+
+------HANDLE SYSTEM EVENTS------
+local function systemEvents( event )
+   print("systemEvent " .. event.type)
+   if ( event.type == "applicationSuspend" ) then
+      print( "suspending..........................." )
+   elseif ( event.type == "applicationResume" ) then
+      print( "resuming............................." )
+   elseif ( event.type == "applicationExit" ) then
+      print( "exiting.............................." )
+   elseif ( event.type == "applicationStart" ) then
+      gameNetworkSetup()  --login to the network here
+   end
+   return true
+end
+
+Runtime:addEventListener( "system", systemEvents )
+
 function start()
 	vs = 0
 	floorlevel = 4 * display.contentHeight/5
@@ -48,20 +90,20 @@ function start()
 	pipe2downMid = (display.contentHeight + pipe2rand) / 2
 
 	pipe1Up = display.newRect(1.5*display.contentWidth, pipe1upMid, 2 * pipeWidth, pipe1rand)
-	pipe1Up:setFillColor(0,1,0)
+	pipe1Up:setFillColor(36/255,227/255,59/255)
 
 	pipe1Down = display.newRect(1.5*display.contentWidth, pipe1downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe1rand)
-	pipe1Down:setFillColor(0,1,0)
+	pipe1Down:setFillColor(36/255,227/255,59/255)
 
 	pipe2Up = display.newRect(display.contentWidth * 2 + pipeWidth, pipe2upMid, 2 * pipeWidth, pipe2rand)
-	pipe2Up:setFillColor(0,1,0)
+	pipe2Up:setFillColor(36/255,227/255,59/255)
 
 	pipe2Down = display.newRect(display.contentWidth * 2 + pipeWidth, pipe2downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe2rand)
-	pipe2Down:setFillColor(0,1,0)
+	pipe2Down:setFillColor(36/255,227/255,59/255)
 
 
 	local floorBlock = display.newRect(display.contentCenterX, 9 * display.contentHeight/10, display.contentWidth, display.contentHeight/5)
-	floorBlock:setFillColor(0,0,1)
+	floorBlock:setFillColor(163/255,152/255,100/255)
 	
 	--[[
 	flapSound = audio.loadSound("flap.mp3")
@@ -128,6 +170,18 @@ local function createNewPipe (pipeNumber)
 	end
 end
 
+local function unlockAchievement (achievementID)
+	gameNetwork.request( "unlockAchievement",
+		{
+			achievement = 
+				{ 
+					identifier=achievementID, percentComplete=100, showsCompletionBanner=true 
+				},
+			listener = achievementRequestCallback
+		} 
+	)
+end
+
 local function movePipes (event)
 	pipe1Up.x = pipe1Up.x - pipeMovement
 	pipe1Down.x = pipe1Down.x - pipeMovement
@@ -149,6 +203,9 @@ local function movePipes (event)
 		pipe1scoreAvailable = false
 		--audio.play(coinSound)
 		media.playSound('coin.mp3')
+		if score == 3 then
+			unlockAchievement('CgkIxY-DlLESEAIQAQ')
+		end
 	end
 	
 	if pipe2Up.x + pipeWidth < ab.x - abH and pipe2scoreAvailable then
@@ -158,13 +215,42 @@ local function movePipes (event)
 		pipe2scoreAvailable = false
 		--audio.play(coinSound)
 		media.playSound('coin.mp3')
+		if score == 3 then
+			unlockAchievement('CgkIxY-DlLESEAIQAQ')
+		end
 	end
 end
 
+local function showLeaderboards()
+   if ( system.getInfo("platformName") == "Android" ) then
+      gameNetwork.show( "leaderboards" )
+   else
+      gameNetwork.show( "leaderboards", { leaderboard = {timeScope="AllTime"} } )
+   end
+   return true
+end
+
 local function retryScene()
-	retry = true
-	tryAgain = display.newText("Tap to try again", display.contentCenterX, 7 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	tryAgain:setFillColor(0,0,0)
+	--tryAgain = display.newText("Tap to try again", display.contentCenterX, 7 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	--tryAgain:setFillColor(0,0,0)
+	tryAgainButton = display.newRect(display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	tryAgainButton:setFillColor(1,0,0)
+	tryAgainButton:addEventListener('touch',tryAgainButton)
+	leaderboardButton = display.newRect(3 * display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	leaderboardButton:setFillColor(0,0,0)
+	leaderboardButton:addEventListener('touch',leaderboardButton)
+	
+	function leaderboardButton:touch (event)
+		showLeaderboards()
+	end
+	
+	function tryAgainButton:touch (event)
+		started = false
+		--retry = false
+		tryAgainButton:removeSelf()
+		leaderboardButton:removeSelf()
+		start()
+	end
 end
 
 local function scoreAnimation()
@@ -281,7 +367,7 @@ local function checkCollision (event)
 		end
 	end
 end
-
+--[[
 function bg:mouse(event)
 	if event.isPrimaryButtonDown then
 		if retry then
@@ -311,6 +397,8 @@ function bg:mouse(event)
 		end
 	end
 end
+--]]
+
 
 function bg:touch(event)
 	if event.phase == 'began' then
@@ -319,6 +407,7 @@ function bg:touch(event)
 			retry = false
 			tryAgain:removeSelf()
 			start()
+			--showLeaderboards()
 		else
 			if started then
 				vs = display.contentHeight/50;
@@ -351,3 +440,4 @@ local file, errorMessage = io.open(filePath, "w+")
 file:write('0')
 io.close(file)
 ]]--
+
