@@ -40,6 +40,87 @@ end
 
 Runtime:addEventListener( "system", systemEvents )
 
+function restart()
+	vs = 0
+	score = 0
+	pipe1scoreAvailable = true
+	pipe2scoreAvailable = true
+
+	started = false
+	lost = false
+
+	--scoreTitle = display.newText("Score:", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	--scoreTitle:setFillColor(0,0,0)
+	scoreTitle.isVisible = true
+	scoreTitle:toFront()
+
+	--scorePoints = display.newText(score, display.contentCenterX, display.contentHeight/5, native.SystemFontBold, 20, 'left')
+	--scorePoints:setFillColor(0,0,0)
+	scorePoints.text = 0
+	scorePoints.isVisible = true
+	scorePoints:toFront()
+
+	ab.x = display.contentWidth/4
+	ab.y = 2*display.contentHeight/5
+	ab.rotation = 0
+	ab:toFront()
+
+	--tapToStart = display.newText("Tap to start", display.contentCenterX, display.contentCenterY, native.SystemFontBold, 20, 'left')
+	--tapToStart:setFillColor(0,0,0)
+	tapToStart.isVisible = true
+	tapToStart:toFront()
+
+	pipe1rand = math.random(display.contentHeight/10, 5 *display.contentHeight/10) -- 2 * display.contentHeight/10
+	pipe2rand = math.random(display.contentHeight/10, 5 *display.contentHeight/10) -- 5 * display.contentHeight/10 
+
+	pipe1upMid = pipe1rand / 2
+	pipe1downMid = (display.contentHeight + pipe1rand) / 2 -- (4 * display.contentHeight / 5 + pipe1rand + display.contentHeight / 5) / 2 -- 
+	pipe2upMid = pipe2rand / 2
+	pipe2downMid = (display.contentHeight + pipe2rand) / 2
+
+	--pipe1Up = display.newRect(1.5*display.contentWidth, pipe1upMid, 2 * pipeWidth, pipe1rand)
+	pipe1Up.x = 1.5 * display.contentWidth
+	pipe1Up.y = pipe1upMid
+	pipe1Up.height = pipe1rand
+	--pipe1Up:setFillColor(36/255,227/255,59/255)
+
+	--pipe1Down = display.newRect(1.5*display.contentWidth, pipe1downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe1rand)
+	pipe1Down.x = 1.5*display.contentWidth
+	pipe1Down.y = pipe1downMid
+	pipe1Down.height = 6 * display.contentHeight/10 - pipe1rand
+	--pipe1Down:setFillColor(36/255,227/255,59/255)
+
+	--pipe2Up = display.newRect(display.contentWidth * 2 + pipeWidth, pipe2upMid, 2 * pipeWidth, pipe2rand)
+	pipe2Up.x = 2 * display.contentWidth + pipeWidth
+	pipe2Up.y = pipe2upMid
+	pipe2Up.height = pipe2rand
+	--pipe2Up:setFillColor(36/255,227/255,59/255)
+
+	--pipe2Down = display.newRect(display.contentWidth * 2 + pipeWidth, pipe2downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe2rand)
+	pipe2Down.x = 2 * display.contentWidth + pipeWidth
+	pipe2Down.y = pipe2downMid
+	pipe2Down.height = 6 * display.contentHeight/10 - pipe2rand
+	--pipe2Down:setFillColor(36/255,227/255,59/255)
+
+	gameOverText.isVisible = false
+	newRecordText.isVisible = false
+	recordText.isVisible = false
+	scoreText.isVisible = false
+	
+	--floorBlock = display.newRect(display.contentCenterX, 9 * display.contentHeight/10, display.contentWidth, display.contentHeight/5)
+	--floorBlock:setFillColor(163/255,152/255,100/255)
+	
+	--[[
+	flapSound = audio.loadSound("flap.mp3")
+	coinSound = audio.loadSound("coin_effect.mp3")
+	yellSound = audio.loadSound("yell.mp3")
+	--]]
+	
+	ab:toFront()
+	scoreTitle:toFront()
+	scorePoints:toFront()
+end
+
 function start()
 	vs = 0
 	floorlevel = 4 * display.contentHeight/5
@@ -101,8 +182,37 @@ function start()
 	pipe2Down:setFillColor(36/255,227/255,59/255)
 
 
-	local floorBlock = display.newRect(display.contentCenterX, 9 * display.contentHeight/10, display.contentWidth, display.contentHeight/5)
+	floorBlock = display.newRect(display.contentCenterX, 9 * display.contentHeight/10, display.contentWidth, display.contentHeight/5)
 	floorBlock:setFillColor(163/255,152/255,100/255)
+	
+	tryAgainButton = display.newRect(display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	tryAgainButton:setFillColor(1,0,0)
+	tryAgainButton.isVisible = false
+	--tryAgainButton:addEventListener('touch',tryAgainButton)
+	leaderboardButton = display.newRect(3 * display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	leaderboardButton:setFillColor(0,0,0)
+	leaderboardButton.isVisible = false
+	--leaderboardButton:addEventListener('touch',leaderboardButton)
+	achievementButton = display.newRect(display.contentWidth/2, 16 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	achievementButton:setFillColor(0,0,1)
+	achievementButton.isVisible = false
+	--achievementButton:addEventListener('touch',achievementButton)
+	
+	scoreText = display.newText('Score: ', display.contentCenterX, 4 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	scoreText:setFillColor(0,0,0)
+	scoreText.isVisible = false
+	
+	recordText = display.newText('Record: ', display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	recordText:setFillColor(0,0,0)
+	recordText.isVisible = false
+	
+	newRecordText = display.newText('NEW RECORD!' , display.contentCenterX, 3 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	newRecordText:setFillColor(1,140/255,0)
+	newRecordText.isVisible = false
+	
+	gameOverText = display.newText("Game over", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	gameOverText:setFillColor(0,0,0)
+	gameOverText.isVisible = false
 	
 	--[[
 	flapSound = audio.loadSound("flap.mp3")
@@ -247,14 +357,18 @@ end
 local function retryScene()
 	--tryAgain = display.newText("Tap to try again", display.contentCenterX, 7 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
 	--tryAgain:setFillColor(0,0,0)
-	tryAgainButton = display.newRect(display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
-	tryAgainButton:setFillColor(1,0,0)
+	
+	--tryAgainButton = display.newRect(display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	--tryAgainButton:setFillColor(1,0,0)
+	tryAgainButton.isVisible = true
 	tryAgainButton:addEventListener('touch',tryAgainButton)
-	leaderboardButton = display.newRect(3 * display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
-	leaderboardButton:setFillColor(0,0,0)
+	--leaderboardButton = display.newRect(3 * display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	--leaderboardButton:setFillColor(0,0,0)
+	leaderboardButton.isVisible = true
 	leaderboardButton:addEventListener('touch',leaderboardButton)
-	achievementButton = display.newRect(display.contentWidth/2, 16 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
-	achievementButton:setFillColor(0,0,1)
+	--achievementButton = display.newRect(display.contentWidth/2, 16 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	--achievementButton:setFillColor(0,0,1)
+	achievementButton.isVisible = true
 	achievementButton:addEventListener('touch',achievementButton)
 	
 	function leaderboardButton:touch (event)
@@ -263,9 +377,23 @@ local function retryScene()
 	
 	function tryAgainButton:touch (event)
 		--started = false
-		tryAgainButton:removeSelf()
-		leaderboardButton:removeSelf()
-		achievementButton:removeSelf()
+		--tryAgainButton:removeSelf()
+		tryAgainButton:removeEventListener('touch',tryAgainButton)
+		tryAgainButton.isVisible = false
+		--display.remove(tryAgainButton)
+		--tryAgainButton = nil
+		
+		--leaderboardButton:removeSelf()
+		leaderboardButton:removeEventListener('touch',leaderboardButton)
+		leaderboardButton.isVisible = false
+		--display.remove(leaderboardButton)
+		--leaderboardButton = nil
+		
+		--achievementButton:removeSelf()
+		achievementButton:removeEventListener('touch',achievementButton)
+		achievementButton.isVisible = false
+		--display.remove(achievementButton)
+		--achievementButton = nil
 		bg:addEventListener('touch', bg)
 		retry = true
 		--start()
@@ -277,20 +405,24 @@ local function retryScene()
 end
 
 local function scoreAnimation()
-	if scoreText then
+	if scoreText.isVisible then
 		scoreText.text = 'Score: ' .. scoreAnimationTemp
 	else
-		scoreText = display.newText('Score: ' .. scoreAnimationTemp, display.contentCenterX, 4 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-		scoreText:setFillColor(0,0,0)
+		scoreText.text = 'Score: ' .. scoreAnimationTemp
+		scoreText.isVisible = true
+		scoreText:toFront()
 	end
-	scoreText:toFront()
+	
 	
 	if scoreAnimationTemp > record then
-		if recordText then
+		if recordText.isVisible then
 			recordText.text = 'Record: ' .. scoreAnimationTemp
 		else
-			recordText = display.newText('Record: ' .. scoreAnimationTemp, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-			recordText:setFillColor(0,0,0)
+			recordText.isVisible = true
+			recordText.text = 'Record: ' .. scoreAnimationTemp
+			recordText:toFront()
+			--recordText = display.newText('Record: ' .. scoreAnimationTemp, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+			--recordText:setFillColor(0,0,0)
 		end
 		
 	end
@@ -298,8 +430,9 @@ local function scoreAnimation()
 end
 
 local function setNewRecord()
-	newRecordText = display.newText('NEW RECORD!' , display.contentCenterX, 3 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	newRecordText:setFillColor(1,140/255,0)
+	--newRecordText = display.newText('NEW RECORD!' , display.contentCenterX, 3 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	--newRecordText:setFillColor(1,140/255,0)
+	newRecordText.isVisible = true
 end
 
 local function submitHighScore(highScore)
@@ -315,8 +448,10 @@ local function submitHighScore(highScore)
 end
 
 local function setRecord(scoreT, recordT, newRecord)
-	recordText = display.newText('Record: ' .. recordT, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	recordText:setFillColor(0,0,0)
+	--recordText = display.newText('Record: ' .. recordT, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	--recordText:setFillColor(0,0,0)
+	recordText.isVisible = true
+	recordText.text = 'Record: ' .. recordT
 	
 	scoreAnimationTemp = 0
 	if scoreT < 3 then
@@ -365,13 +500,19 @@ local function gameOver()
 	media.playSound('yell.mp3')
 	system.vibrate()
 	lost = true
-	scoreTitle:removeSelf()
-	scorePoints:removeSelf()
-	text = display.newText("Game over", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	text:setFillColor(0,0,0)
-	timer.pause(gravityTimer)
-	timer.pause(movePipesTimer)
-	timer.pause(checkCollisionTimer)
+	
+	scoreTitle.isVisible = false
+	--scoreTitle = nil
+	scorePoints.isVisible = false
+	--scorePoints = nil
+	
+	--text = display.newText("Game over", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	--text:setFillColor(0,0,0)
+	gameOverText.isVisible = true
+	
+	timer.cancel(gravityTimer)
+	timer.cancel(movePipesTimer)
+	timer.cancel(checkCollisionTimer)
 	ab.rotation = 90
 	movementParams = {
 		x = ab.x,
@@ -411,7 +552,8 @@ function bg:touch(event)
 			started = false
 			retry = false
 			--tryAgain:removeSelf()
-			start()
+			--removeGarbage()
+			restart()
 			--showLeaderboards()
 		else
 			if started then
@@ -426,7 +568,10 @@ function bg:touch(event)
 				movePipesTimer = timer.performWithDelay(fps, movePipes, -1)
 				checkCollisionTimer = timer.performWithDelay(fps, checkCollision, -1)
 				gravityTimer = timer.performWithDelay(fps, gravity, -1)
-				tapToStart:removeSelf()
+				--display.remove(tapToStart)
+				--tapToStart:removeSelf()
+				--tapToStart = nil
+				tapToStart.isVisible = false
 				if not lost then
 					--audio.play(flapSound)
 					media.playSound('flap.mp3')
@@ -444,4 +589,17 @@ local filePath = system.pathForFile('recordFile.txt',system.DocumentsDirectory)
 local file, errorMessage = io.open(filePath, "w+")
 file:write('0')
 io.close(file)
+--]]
+
+--[[
+local monitorMem = function()
+
+    collectgarbage()
+    print( "MemUsage: " .. collectgarbage("count") )
+
+    local textMem = system.getInfo( "textureMemoryUsed" ) / 1000000
+    print( "TexMem:   " .. textMem )
+end
+
+Runtime:addEventListener( "enterFrame", monitorMem )
 --]]
