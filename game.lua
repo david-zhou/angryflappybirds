@@ -202,8 +202,14 @@ local function movePipes (event)
 		pipe1scoreAvailable = false
 		--audio.play(coinSound)
 		media.playSound('coin.mp3')
-		if score == 3 then
+		if score == 1 then
 			unlockAchievement('CgkIxY-DlLESEAIQAQ')
+		end
+		if score == 5 then
+			unlockAchievement('CgkIxY-DlLESEAIQAg')
+		end
+		if score == 999 then
+			unlockAchievement('CgkIxY-DlLESEAIQBQ')
 		end
 	end
 	
@@ -214,8 +220,11 @@ local function movePipes (event)
 		pipe2scoreAvailable = false
 		--audio.play(coinSound)
 		media.playSound('coin.mp3')
-		if score == 3 then
-			unlockAchievement('CgkIxY-DlLESEAIQAQ')
+		if score == 20 then
+			unlockAchievement('CgkIxY-DlLESEAIQAw')
+		end
+		if score == 100 then
+			unlockAchievement('CgkIxY-DlLESEAIQBA')
 		end
 	end
 end
@@ -230,6 +239,11 @@ local function showLeaderboards()
    return true
 end
 
+local function showAchievements()
+   gameNetwork.show("achievements")
+   return true
+end
+
 local function retryScene()
 	--tryAgain = display.newText("Tap to try again", display.contentCenterX, 7 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
 	--tryAgain:setFillColor(0,0,0)
@@ -239,6 +253,9 @@ local function retryScene()
 	leaderboardButton = display.newRect(3 * display.contentWidth/4, 13 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
 	leaderboardButton:setFillColor(0,0,0)
 	leaderboardButton:addEventListener('touch',leaderboardButton)
+	achievementButton = display.newRect(display.contentWidth/2, 16 * display.contentHeight/20, 3 * display.contentWidth/10, display.contentHeight/10)
+	achievementButton:setFillColor(0,0,1)
+	achievementButton:addEventListener('touch',achievementButton)
 	
 	function leaderboardButton:touch (event)
 		showLeaderboards()
@@ -248,9 +265,14 @@ local function retryScene()
 		--started = false
 		tryAgainButton:removeSelf()
 		leaderboardButton:removeSelf()
+		achievementButton:removeSelf()
 		bg:addEventListener('touch', bg)
 		retry = true
 		--start()
+	end
+	
+	function achievementButton:touch (event)
+		showAchievements()
 	end
 end
 
@@ -280,6 +302,18 @@ local function setNewRecord()
 	newRecordText:setFillColor(1,140/255,0)
 end
 
+local function submitHighScore(highScore)
+	gameNetwork.request("setHighScore",
+		{
+			localPlayerScore = 
+			{ 
+				category='CgkIxY-DlLESEAIQBg', 
+				value=tonumber(highScore)
+			}
+		}
+	)
+end
+
 local function setRecord(scoreT, recordT, newRecord)
 	recordText = display.newText('Record: ' .. recordT, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
 	recordText:setFillColor(0,0,0)
@@ -293,6 +327,7 @@ local function setRecord(scoreT, recordT, newRecord)
 	
 	if newRecord then 
 		timer.performWithDelay(2000, setNewRecord)
+		submitHighScore(scoreT)
 	end
 end
 
@@ -409,5 +444,4 @@ local filePath = system.pathForFile('recordFile.txt',system.DocumentsDirectory)
 local file, errorMessage = io.open(filePath, "w+")
 file:write('0')
 io.close(file)
-]]--
-
+--]]
