@@ -58,7 +58,6 @@ function start()
 	abH = display.contentHeight/40
 
 	started = false
-	retry = false
 	lost = false
 	
 	bg = display.newRect(display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight)
@@ -221,6 +220,7 @@ local function movePipes (event)
 	end
 end
 
+
 local function showLeaderboards()
    if ( system.getInfo("platformName") == "Android" ) then
       gameNetwork.show( "leaderboards" )
@@ -245,11 +245,12 @@ local function retryScene()
 	end
 	
 	function tryAgainButton:touch (event)
-		started = false
-		--retry = false
+		--started = false
 		tryAgainButton:removeSelf()
 		leaderboardButton:removeSelf()
-		start()
+		bg:addEventListener('touch', bg)
+		retry = true
+		--start()
 	end
 end
 
@@ -345,6 +346,7 @@ local function gameOver()
 	transition.moveTo(ab, movementParams)
 	timer.performWithDelay(2000, retryScene)
 	maxRecord()
+	bg:removeEventListener('touch', bg)
 end
 
 local function checkCollision (event)
@@ -367,45 +369,13 @@ local function checkCollision (event)
 		end
 	end
 end
---[[
-function bg:mouse(event)
-	if event.isPrimaryButtonDown then
-		if retry then
-			started = false
-			retry = false
-			tryAgain:removeSelf()
-			start()
-		else
-			if started then
-				vs = display.contentHeight/50;
-				if not lost then
-					--audio.play(flapSound)
-					media.playSound('flap.mp3')
-				end
-			else
-				started = true
-				vs = display.contentHeight/50;
-				movePipesTimer = timer.performWithDelay(fps, movePipes, -1)
-				checkCollisionTimer = timer.performWithDelay(fps, checkCollision, -1)
-				gravityTimer = timer.performWithDelay(fps, gravity, -1)
-				tapToStart:removeSelf()
-				if not lost then
-					--audio.play(flapSound)
-					media.playSound('flap.mp3')
-				end
-			end
-		end
-	end
-end
---]]
-
 
 function bg:touch(event)
 	if event.phase == 'began' then
 		if retry then
 			started = false
 			retry = false
-			tryAgain:removeSelf()
+			--tryAgain:removeSelf()
 			start()
 			--showLeaderboards()
 		else
