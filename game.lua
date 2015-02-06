@@ -1,3 +1,118 @@
+
+
+local composer = require( "composer" )
+local scene = composer.newScene()
+
+---------------------------------------------------------------------------------
+-- BEGINNING OF YOUR IMPLEMENTATION
+---------------------------------------------------------------------------------
+local gameNetwork = require( "gameNetwork" )
+local playerName
+
+local function loadLocalPlayerCallback( event )
+   playerName = event.data.alias
+   saveSettings()  --save player data locally using your own "saveSettings()" function
+end
+
+local function gameNetworkLoginCallback( event )
+   gameNetwork.request( "loadLocalPlayer", { listener=loadLocalPlayerCallback } )
+   return true
+end
+
+local function gpgsInitCallback( event )
+   gameNetwork.request( "login", { userInitiated=true, listener=gameNetworkLoginCallback } )
+end
+
+local function gameNetworkSetup()
+   if ( system.getInfo("platformName") == "Android" ) then
+      gameNetwork.init( "google", gpgsInitCallback )
+   else
+      gameNetwork.init( "gamecenter", gameNetworkLoginCallback )
+   end
+end
+
+------HANDLE SYSTEM EVENTS------
+local function systemEvents( event )
+   print("systemEvent " .. event.type)
+   if ( event.type == "applicationSuspend" ) then
+      print( "suspending..........................." )
+   elseif ( event.type == "applicationResume" ) then
+      print( "resuming............................." )
+   elseif ( event.type == "applicationExit" ) then
+      print( "exiting.............................." )
+   elseif ( event.type == "applicationStart" ) then
+      gameNetworkSetup()  --login to the network here
+   end
+   return true
+end
+
+function restart()
+	vs = 0
+	score = 0
+	pipe1scoreAvailable = true
+	pipe2scoreAvailable = true
+	started = false
+	lost = false
+	--scoreTitle = display.newText("Score:", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	--scoreTitle:setFillColor(0,0,0)
+	scoreTitle.isVisible = true
+	scoreTitle:toFront()
+	--scorePoints = display.newText(score, display.contentCenterX, display.contentHeight/5, native.SystemFontBold, 20, 'left')
+	--scorePoints:setFillColor(0,0,0)
+	scorePoints.text = 0
+	scorePoints.isVisible = true
+	scorePoints:toFront()
+	ab.x = display.contentWidth/4
+	ab.y = 2*display.contentHeight/5
+	ab.rotation = 0
+	ab:toFront()
+	--tapToStart = display.newText("Tap to start", display.contentCenterX, display.contentCenterY, native.SystemFontBold, 20, 'left')
+	--tapToStart:setFillColor(0,0,0)
+	tapToStart.isVisible = true
+	tapToStart:toFront()
+	pipe1rand = math.random(display.contentHeight/10, 5 *display.contentHeight/10) -- 2 * display.contentHeight/10
+	pipe2rand = math.random(display.contentHeight/10, 5 *display.contentHeight/10) -- 5 * display.contentHeight/10
+	pipe1upMid = pipe1rand / 2
+	pipe1downMid = (display.contentHeight + pipe1rand) / 2 -- (4 * display.contentHeight / 5 + pipe1rand + display.contentHeight / 5) / 2 --
+	pipe2upMid = pipe2rand / 2
+	pipe2downMid = (display.contentHeight + pipe2rand) / 2
+	--pipe1Up = display.newRect(1.5*display.contentWidth, pipe1upMid, 2 * pipeWidth, pipe1rand)
+	pipe1Up.x = 1.5 * display.contentWidth
+	pipe1Up.y = pipe1upMid
+	pipe1Up.height = pipe1rand
+	--pipe1Up:setFillColor(36/255,227/255,59/255)
+	--pipe1Down = display.newRect(1.5*display.contentWidth, pipe1downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe1rand)
+	pipe1Down.x = 1.5*display.contentWidth
+	pipe1Down.y = pipe1downMid
+	pipe1Down.height = 6 * display.contentHeight/10 - pipe1rand
+	--pipe1Down:setFillColor(36/255,227/255,59/255)
+	--pipe2Up = display.newRect(display.contentWidth * 2 + pipeWidth, pipe2upMid, 2 * pipeWidth, pipe2rand)
+	pipe2Up.x = 2 * display.contentWidth + pipeWidth
+	pipe2Up.y = pipe2upMid
+	pipe2Up.height = pipe2rand
+	--pipe2Up:setFillColor(36/255,227/255,59/255)
+	--pipe2Down = display.newRect(display.contentWidth * 2 + pipeWidth, pipe2downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe2rand)
+	pipe2Down.x = 2 * display.contentWidth + pipeWidth
+	pipe2Down.y = pipe2downMid
+	pipe2Down.height = 6 * display.contentHeight/10 - pipe2rand
+	--pipe2Down:setFillColor(36/255,227/255,59/255)
+	gameOverText.isVisible = false
+	newRecordText.isVisible = false
+	recordText.isVisible = false
+	scoreText.isVisible = false
+	--floorBlock = display.newRect(display.contentCenterX, 9 * display.contentHeight/10, display.contentWidth, display.contentHeight/5)
+	--floorBlock:setFillColor(163/255,152/255,100/255)
+	--[[
+	flapSound = audio.loadSound("flap.mp3")
+	coinSound = audio.loadSound("coin_effect.mp3")
+	yellSound = audio.loadSound("yell.mp3")
+	--]]
+	ab:toFront()
+	scoreTitle:toFront()
+	scorePoints:toFront()
+end
+
+	
 function start()
 	vs = 0
 	floorlevel = 4 * display.contentHeight/5
@@ -16,26 +131,26 @@ function start()
 	abH = display.contentHeight/40
 
 	started = false
-	retry = false
 	lost = false
 	
-	bg = display.newRect(display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight)
-	bg:setFillColor(100,50,20)
+	bg = display.newImageRect( "bg.jpg", display.contentWidth, display.contentHeight)
+	bg.x = display.contentCenterX
+	bg.y = display.contentCenterY
 
-	scoreTitle = display.newText("Score:", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	scoreTitle = display.newText("Score:", display.contentCenterX, display.contentHeight/10, "Gargle Cd Rg", 20, 'left')
 	scoreTitle:setFillColor(0,0,0)
 	scoreTitle:toFront()
 
-	scorePoints = display.newText(score, display.contentCenterX, display.contentHeight/5, native.SystemFontBold, 20, 'left')
+	scorePoints = display.newText(score, display.contentCenterX, display.contentHeight/5, "Gargle Cd Rg", 20, 'left')
 	scorePoints:setFillColor(0,0,0)
 	scorePoints:toFront()
 
-	ab = display.newImage('angrybird.gif')
+	ab = display.newImage('angrybird.png')
 	ab:translate(display.contentWidth/4, 2*display.contentHeight/5)
 	ab:scale((display.contentHeight/20)/imageH,((display.contentHeight/20)/imageH))
 	ab:toFront()
 
-	tapToStart = display.newText("Tap to start", display.contentCenterX, display.contentCenterY, native.SystemFontBold, 20, 'left')
+	tapToStart = display.newText("Tap to start", display.contentCenterX, display.contentCenterY, "Gargle Cd Rg", 20, 'left')
 	tapToStart:setFillColor(0,0,0)
 	tapToStart:toFront()
 
@@ -47,34 +162,69 @@ function start()
 	pipe2upMid = pipe2rand / 2
 	pipe2downMid = (display.contentHeight + pipe2rand) / 2
 
-	pipe1Up = display.newRect(1.5*display.contentWidth, pipe1upMid, 2 * pipeWidth, pipe1rand)
-	pipe1Up:setFillColor(0,1,0)
+	pipe1Up = display.newImageRect('pipe2.png', 2 * pipeWidth, pipe1rand)
+	pipe1Up.x = 1.5*display.contentWidth
+	pipe1Up.y = pipe1upMid
 
-	pipe1Down = display.newRect(1.5*display.contentWidth, pipe1downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe1rand)
-	pipe1Down:setFillColor(0,1,0)
+	pipe1Down = display.newImageRect('pipe.png', 2 * pipeWidth, 6 * display.contentHeight/10 - pipe1rand)
+	pipe1Down.x = 1.5*display.contentWidth
+	pipe1Down.y = pipe1downMid
 
-	pipe2Up = display.newRect(display.contentWidth * 2 + pipeWidth, pipe2upMid, 2 * pipeWidth, pipe2rand)
-	pipe2Up:setFillColor(0,1,0)
+	pipe2Up = display.newImageRect('pipe2.png', 2 * pipeWidth, pipe2rand)
+	pipe2Up.x = display.contentWidth * 2 + pipeWidth
+	pipe2Up.y = pipe2upMid
 
-	pipe2Down = display.newRect(display.contentWidth * 2 + pipeWidth, pipe2downMid, 2 * pipeWidth, 6 * display.contentHeight/10 - pipe2rand)
-	pipe2Down:setFillColor(0,1,0)
+	pipe2Down = display.newImageRect('pipe.png', 2 * pipeWidth, 6 * display.contentHeight/10 - pipe2rand)
+	pipe2Down.x = display.contentWidth * 2 + pipeWidth
+	pipe2Down.y = pipe2downMid
 
 
-	local floorBlock = display.newRect(display.contentCenterX, 9 * display.contentHeight/10, display.contentWidth, display.contentHeight/5)
-	floorBlock:setFillColor(0,0,1)
+	floorBlock = display.newImageRect('floor.png', display.contentWidth, display.contentHeight/5)
+	floorBlock.x = display.contentCenterX
+	floorBlock.y = 9 * display.contentHeight/10
 	
-	--[[
-	flapSound = audio.loadSound("flap.mp3")
-	coinSound = audio.loadSound("coin_effect.mp3")
-	yellSound = audio.loadSound("yell.mp3")
-	--]]
-	
+	tryAgainButton = display.newImage('button.png')
+	tryAgainButton:translate(display.contentWidth/4, 13 * display.contentHeight/20)
+	tryAgainButton:scale(0.15,0.15)
+	tryAgainText = display.newText("TRY AGAIN", display.contentWidth/4, (13 * display.contentHeight/20)-5, "Gargle Cd Rg", 27)
+	tryAgainButton.isVisible = false
+	tryAgainText.isVisible = false
+
+	leaderboardButton = display.newImage('button.png')
+	leaderboardButton:translate(3 * display.contentWidth/4, 13 * display.contentHeight/20)
+	leaderboardButton:scale(0.15,0.15)
+	leaderboardText = display.newText("LEADERBOARD", 3 * display.contentWidth/4, (13 * display.contentHeight/20)-3, "Gargle Cd Rg", 19)
+	leaderboardButton.isVisible = false
+	leaderboardText.isVisible = false
+
+	achievementButton = display.newImage('button.png') 
+	achievementButton:translate(display.contentWidth/2, 16 * display.contentHeight/20)
+	achievementButton:scale(0.15,0.15)
+	achievementText = display.newText("ACHIEVEMENTS", display.contentWidth/2, (16 * display.contentHeight/20)-3, "Gargle Cd Rg", 18)
+	achievementButton.isVisible = false
+	achievementText.isVisible = false
+
+	scoreText = display.newText('Score: ', display.contentCenterX, 4 * display.contentHeight/10, "Gargle Cd Rg", 20, 'left')
+	scoreText:setFillColor(0,0,0)
+	scoreText.isVisible = false
+
+	recordText = display.newText('Record: ', display.contentCenterX, 5 * display.contentHeight/10, "Gargle Cd Rg", 20, 'left')
+	recordText:setFillColor(0,0,0)
+	recordText.isVisible = false
+
+	newRecordText = display.newText('NEW RECORD!' , display.contentCenterX, 3 * display.contentHeight/10, "Gargle Cd Rg", 20, 'left')
+	newRecordText:setFillColor(1,140/255,0)
+	newRecordText.isVisible = false
+
+	gameOverText = display.newText("GAME OVER", display.contentCenterX, display.contentHeight/10, "Gargle Cd Rg", 20, 'left')
+	gameOverText:setFillColor(0,0,0)
+	gameOverText.isVisible = false
+
 	ab:toFront()
 	scoreTitle:toFront()
 	scorePoints:toFront()
 end
 
-start()
 
 local function gravity (event)
 	if vs < 0 then
@@ -128,6 +278,18 @@ local function createNewPipe (pipeNumber)
 	end
 end
 
+local function unlockAchievement (achievementID)
+	gameNetwork.request( "unlockAchievement",
+		{
+			achievement =
+			{
+				identifier=achievementID, percentComplete=100, showsCompletionBanner=true
+			},
+			listener = achievementRequestCallback
+		}
+	)
+end
+
 local function movePipes (event)
 	pipe1Up.x = pipe1Up.x - pipeMovement
 	pipe1Down.x = pipe1Down.x - pipeMovement
@@ -147,8 +309,17 @@ local function movePipes (event)
 		scorePoints.text = score
 		scorePoints:toFront()
 		pipe1scoreAvailable = false
-		--audio.play(coinSound)
+		
 		media.playSound('coin.mp3')
+		if score == 1 then
+			unlockAchievement('CgkImKWCu6UGEAIQAQ')
+		end
+		if score == 5 then
+			unlockAchievement('CgkImKWCu6UGEAIQAg')
+		end
+		if score == 999 then
+			unlockAchievement('CgkImKWCu6UGEAIQBQ')
+		end
 	end
 	
 	if pipe2Up.x + pipeWidth < ab.x - abH and pipe2scoreAvailable then
@@ -156,56 +327,134 @@ local function movePipes (event)
 		scorePoints.text = score
 		scorePoints:toFront()
 		pipe2scoreAvailable = false
-		--audio.play(coinSound)
+	
 		media.playSound('coin.mp3')
+		if score == 20 then
+			unlockAchievement('CgkImKWCu6UGEAIQAw')
+		end
+		if score == 100 then
+			unlockAchievement('CgkImKWCu6UGEAIQBA')
+		end
 	end
+end
+
+local function showLeaderboards()
+	if ( system.getInfo("platformName") == "Android" ) then
+		gameNetwork.show( "leaderboards" )
+	else
+		gameNetwork.show( "leaderboards", { leaderboard = {timeScope="AllTime"} } )
+	end
+	return true
+end
+
+local function showAchievements()
+	gameNetwork.show("achievements")
+	return true
 end
 
 local function retryScene()
-	retry = true
-	tryAgain = display.newText("Tap to try again", display.contentCenterX, 7 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	tryAgain:setFillColor(0,0,0)
+	tryAgainButton.isVisible = true
+	tryAgainText.isVisible = true
+	tryAgainButton:addEventListener('touch',tryAgainButton)
+
+	leaderboardButton.isVisible = true
+	leaderboardText.isVisible = true
+	leaderboardButton:addEventListener('touch',leaderboardButton)
+
+	achievementButton.isVisible = true
+	achievementText.isVisible = true
+	achievementButton:addEventListener('touch',achievementButton)
+
+	function leaderboardButton:touch (event)
+		showLeaderboards()
+	end
+
+	function tryAgainButton:touch (event)
+		--started = false
+		--tryAgainButton:removeSelf()
+		tryAgainButton:removeEventListener('touch',tryAgainButton)
+		tryAgainButton.isVisible = false
+		tryAgainText.isVisible = false
+		--display.remove(tryAgainButton)
+		--tryAgainButton = nil
+		--leaderboardButton:removeSelf()
+		leaderboardButton:removeEventListener('touch',leaderboardButton)
+		leaderboardButton.isVisible = false
+		leaderboardText.isVisible = false
+		--display.remove(leaderboardButton)
+		--leaderboardButton = nil
+		--achievementButton:removeSelf()
+		achievementButton:removeEventListener('touch',achievementButton)
+		achievementButton.isVisible = false
+		achievementText.isVisible = false
+		--display.remove(achievementButton)
+		--achievementButton = nil
+		bg:addEventListener('touch', bg)
+		retry = true
+		--start()
+	end
+
+	function achievementButton:touch (event)
+		showAchievements()
+	end
 end
 
 local function scoreAnimation()
-	if scoreText then
+	if scoreText.isVisible then
 		scoreText.text = 'Score: ' .. scoreAnimationTemp
 	else
-		scoreText = display.newText('Score: ' .. scoreAnimationTemp, display.contentCenterX, 4 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-		scoreText:setFillColor(0,0,0)
+		scoreText.text = 'Score: ' .. scoreAnimationTemp
+		scoreText.isVisible = true
+		scoreText:toFront()
 	end
-	scoreText:toFront()
 	
 	if scoreAnimationTemp > record then
-		if recordText then
+		if recordText.isVisible then
 			recordText.text = 'Record: ' .. scoreAnimationTemp
 		else
-			recordText = display.newText('Record: ' .. scoreAnimationTemp, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-			recordText:setFillColor(0,0,0)
+			recordText.isVisible = true
+			recordText.text = 'Record: ' .. scoreAnimationTemp
+			recordText:toFront()
+			--recordText = display.newText('Record: ' .. scoreAnimationTemp, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+			--recordText:setFillColor(0,0,0)
 		end
-		
 	end
 	scoreAnimationTemp = scoreAnimationTemp + 1
 end
 
 local function setNewRecord()
-	newRecordText = display.newText('NEW RECORD!' , display.contentCenterX, 3 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	newRecordText:setFillColor(1,140/255,0)
+	newRecordText.isVisible = true
+end
+
+
+local function submitHighScore(highScore)
+	gameNetwork.request("setHighScore",
+		{
+			localPlayerScore =
+			{
+				category='CgkImKWCu6UGEAIQBg',
+				value=tonumber(highScore)
+			}
+		}
+	)
 end
 
 local function setRecord(scoreT, recordT, newRecord)
-	recordText = display.newText('Record: ' .. recordT, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	recordText:setFillColor(0,0,0)
-	
+	--recordText = display.newText('Record: ' .. recordT, display.contentCenterX, 5 * display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	--recordText:setFillColor(0,0,0)
+	recordText.isVisible = true
+	recordText.text = 'Record: ' .. recordT
 	scoreAnimationTemp = 0
+	
 	if scoreT < 3 then
 		timer.performWithDelay(500, scoreAnimation, scoreT + 1)
 	else
 		timer.performWithDelay(1500 / scoreT, scoreAnimation, scoreT + 1)
 	end
 	
-	if newRecord then 
+	if newRecord then
 		timer.performWithDelay(2000, setNewRecord)
+		submitHighScore(scoreT)
 	end
 end
 
@@ -228,10 +477,12 @@ local function maxRecord()
 		file = io.open(filePath, 'w+')
 		file:write(score)
 		
+		record = 0
+
 		if score > 0 then
-			setRecord(score, score, true)
+			setRecord(score, record, true)
 		else
-			setRecord(score, score, false)
+			setRecord(score, record, false)
 		end
 	end
 	
@@ -243,13 +494,16 @@ local function gameOver()
 	media.playSound('yell.mp3')
 	system.vibrate()
 	lost = true
-	scoreTitle:removeSelf()
-	scorePoints:removeSelf()
-	text = display.newText("Game over", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
-	text:setFillColor(0,0,0)
-	timer.pause(gravityTimer)
-	timer.pause(movePipesTimer)
-	timer.pause(checkCollisionTimer)
+	scoreTitle.isVisible = false
+	--scoreTitle = nil
+	scorePoints.isVisible = false
+	--scorePoints = nil
+	--text = display.newText("Game over", display.contentCenterX, display.contentHeight/10, native.SystemFontBold, 20, 'left')
+	--text:setFillColor(0,0,0)
+	gameOverText.isVisible = true
+	timer.cancel(gravityTimer)
+	timer.cancel(movePipesTimer)
+	timer.cancel(checkCollisionTimer)
 	ab.rotation = 90
 	movementParams = {
 		x = ab.x,
@@ -259,6 +513,7 @@ local function gameOver()
 	transition.moveTo(ab, movementParams)
 	timer.performWithDelay(2000, retryScene)
 	maxRecord()
+	bg:removeEventListener('touch', bg)
 end
 
 local function checkCollision (event)
@@ -282,72 +537,94 @@ local function checkCollision (event)
 	end
 end
 
-function bg:mouse(event)
-	if event.isPrimaryButtonDown then
-		if retry then
-			started = false
-			retry = false
-			tryAgain:removeSelf()
-			start()
-		else
-			if started then
-				vs = display.contentHeight/50;
-				if not lost then
-					--audio.play(flapSound)
-					media.playSound('flap.mp3')
-				end
+-- Called when the scene's view does not exist:
+function scene:create( event )
+	local sceneGroup = self.view
+
+	--Runtime:addEventListener( "system", systemEvents )
+	--gameNetwork.init( "google", gpgsInitCallback )
+	gameNetworkSetup()
+	start()
+	
+	function bg:touch(event)
+		if event.phase == 'began' then
+			if retry then
+				started = false
+				retry = false
+				--tryAgain:removeSelf()
+				--removeGarbage()
+				restart()
+				--showLeaderboards()
 			else
-				started = true
-				vs = display.contentHeight/50;
-				movePipesTimer = timer.performWithDelay(fps, movePipes, -1)
-				checkCollisionTimer = timer.performWithDelay(fps, checkCollision, -1)
-				gravityTimer = timer.performWithDelay(fps, gravity, -1)
-				tapToStart:removeSelf()
-				if not lost then
+				if started then
+					vs = display.contentHeight/50;
+					if not lost then
+						--audio.play(flapSound)
+						media.playSound('flap.mp3')
+					end
+				else
+					started = true
+					vs = display.contentHeight/50;
+					movePipesTimer = timer.performWithDelay(fps, movePipes, -1)
+					checkCollisionTimer = timer.performWithDelay(fps, checkCollision, -1)
+					gravityTimer = timer.performWithDelay(fps, gravity, -1)
+					--display.remove(tapToStart)
+					--tapToStart:removeSelf()
+					--tapToStart = nil
+					tapToStart.isVisible = false
+					if not lost then
 					--audio.play(flapSound)
-					media.playSound('flap.mp3')
+						media.playSound('flap.mp3')
+					end
 				end
 			end
 		end
 	end
+	
+	bg:addEventListener('mouse', bg)
+	bg:addEventListener('touch', bg)
 end
 
-function bg:touch(event)
-	if event.phase == 'began' then
-		if retry then
-			started = false
-			retry = false
-			tryAgain:removeSelf()
-			start()
-		else
-			if started then
-				vs = display.contentHeight/50;
-				if not lost then
-					--audio.play(flapSound)
-					media.playSound('flap.mp3')
-				end
-			else
-				started = true
-				vs = display.contentHeight/50;
-				movePipesTimer = timer.performWithDelay(fps, movePipes, -1)
-				checkCollisionTimer = timer.performWithDelay(fps, checkCollision, -1)
-				gravityTimer = timer.performWithDelay(fps, gravity, -1)
-				tapToStart:removeSelf()
-				if not lost then
-					--audio.play(flapSound)
-					media.playSound('flap.mp3')
-				end
-			end
-		end
+
+
+
+function scene:show( event )
+	local sceneGroup = self.view
+	local phase = event.phase
+	
+	if "did" == phase then
+
+		print( "1: show event, phase did" )
+	
 	end
+	
 end
 
-bg:addEventListener('mouse', bg)
-bg:addEventListener('touch', bg)
+function scene:hide( event )
+	
+	local phase = event.phase
+	
+	if "will" == phase then
+	
+	
+	end
+	
+end
 
---[[
-local filePath = system.pathForFile('recordFile.txt',system.DocumentsDirectory)
-local file, errorMessage = io.open(filePath, "w+")
-file:write('0')
-io.close(file)
-]]--
+function scene:destroy( event )
+
+local sceneGroup = self.view
+	print( "((destroying scene 1's view))" )
+end
+
+---------------------------------------------------------------------------------
+
+-- Listener setup
+scene:addEventListener( "create", scene )
+scene:addEventListener( "show", scene )
+scene:addEventListener( "hide", scene )
+scene:addEventListener( "destroy", scene )
+
+---------------------------------------------------------------------------------
+
+return scene
